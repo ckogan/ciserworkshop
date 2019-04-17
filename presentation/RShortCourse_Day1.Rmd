@@ -1,0 +1,306 @@
+---
+title: "CISER Statistics in R Workshop: Day 1"
+subtitle: "Presented by the Center for Interdisciplinary Statistical Education and Research"
+output: 
+  slidy_presentation: default
+
+---
+
+Workshop Overview
+======================================================== 
+
+```{r init, include = F}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, error = F)
+```
+
+```{r load, echo = F, include = F}
+source("../../../classes/stat511/R/show_png.R")
+library(tidyverse)
+```
+
+* Day 1
+    + Sample Size Calculations
+    + Using R Data Frames 
+    + t-tests
+    + Linear regression
+
+* Day 2
+    + Reading data into R  
+    + Fixed Effects ANOVAs
+    + Random Effects Models
+
+
+Sample Size Calculations in R
+======================================================== 
+
+<!-- INSERT PHOTO OF DOG BLOOD DRAW -->
+* Study to compare different solutions (A and B) for platelet storage in dogs
+* Primary interest is to compare clumping of A to clumping of B
+* Plan to analyze results using a t-test
+* HOW DO I FIND OUT HOW TO ESTIMATE SAMPLE SIZES IN R?
+
+
+Extending the Functionality of R
+======================================================== 
+
+* An R package is a collection of R functions, data, and compiled code in a well defined format
+* Packages extend the base functionality of R  
+
+```{r, echo = F}
+show_png("../../../classes/stat511/img/img-000139.png", file = T)
+```
+
+
+Finding a Package for Sample Size Calculations
+======================================================== 
+* Typically try:
+    + CRAN Task Views: https://cran.r-project.org/web/views/
+    + Google Search: "R power calculation"
+
+* The `pwr` package in R can be used to make power calculations for some simple cases including
+    + Tests for one or two normal populations
+    + Tests for one or two proportions
+* A package can be installed using the `install.packages()` function
+
+```{r, eval = F}
+install.packages('pwr')
+```
+
+* Every time that you restart R and want to use the `pwr` package, run the following to make the functions available
+
+```{r}
+library(pwr)
+```
+
+* The `pwr.t.test` function can be used to make power calculations for 1-sample, 2-sample and paired t-tests   
+
+
+    
+Sample Size Calculations in R
+========================================================     
+* To make a sample size calculation, we need
+    + alpha level = rate of being wrong under the null
+    + power = rate of being right given model assumptions at the minimal significant difference
+    + error standard deviation = expected deviation from treatment mean
+    + minimal significant difference = the smallest difference we still want to be able to detect
+
+* We want to make a power calculation for a one-sample t-test
+* Assume this information is known
+    + Type I error rate ($\alpha$) = 0.05 
+    + Type II error rate ($\beta$) = 0.20
+    + error standard deviation = 1.25
+    + difference in means = 0.6
+    
+`pwr` package: t-test power calculations
+======================================================== 
+
+* Requires entering
+    + Effect Size: `d` =  difference in means divided by estimated standard deviation
+    + Type I Error Rate: `sig.level`
+    + Power: `power` = 1 - Type II Error Rate
+    + Type of t-test: `type` = `two.sample`, `one.sample`, `paired`
+    + Alternative: `two.sided`, `greater`, `less`
+
+```{r, eval = F}
+library(pwr)
+pwr.t.test(d = 0.6 / 1.25, sig.level = 0.05, power = 0.80, type = "one.sample", alternative = "two.sided")
+```
+
+
+`pwr` package: one-sample t-test power calculation
+======================================================== 
+
+```{r, echo = F}
+show_png("../../../classes/stat511/img/img-000138.png", file = T)
+```
+
+
+```{r}
+library(pwr)
+pwr.t.test(d = 0.6 / 1.25, sig.level = 0.05, power = 0.80, type = "one.sample", alternative = "two.sided")
+```
+
+
+Exercise 1: Sample size for paired t-test
+======================================================== 
+* Assume that a sample of cats are to undergo two separate treatments (trt A and trt B) for pain in randomized order
+* Assume:
+    + We plan on testing for differences between trt A and trt B with a paired t-test (equivalent to one-sample t-test on differences in pain)
+    + Want to be able to detect an average difference in treatments of 0.75 or greater
+    + Standard deviation of differences is 1.5
+    + Want a power of 0.90 at an alpha value of 0.05
+
+
+
+Exercise 1 Solution
+======================================================== 
+
+```{r}
+pwr.t.test(d = 0.75 / 1.5, sig.level = 0.05, power = 0.90, type = "one.sample", alternative = "two.sided")
+```
+
+Tooth Growth Dataset
+======================================================== 
+ToothGrowth data set contains the result from an experiment studying the effect of vitamin C on tooth growth in 60 Guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, (orange juice or ascorbic acid (a form of vitamin C and coded as VC).
+
+* The `head` function returns the first or last parts of a vector, matrix, table, data frame or function
+* The `head` function is useful in getting a quick sense of what your data look like
+
+```{r}
+head(ToothGrowth)
+```
+
+
+
+data.frames for working with data of multiple types in R
+========================================================
+
+* data.frames allow for row / column subsetting of multi-class data
+* ToothGrowth is a data.frame
+* We can verify this using the `class` function
+
+```{r}
+class(ToothGrowth)
+```
+
+* The class function is very helpful in identifying whether variables are of the appropriate class before we conduct an analysis
+* We can check the class of variable in the ToothGrowth data.frame 
+
+```{r}
+class(ToothGrowth$len)
+```
+
+* Placing the `$` after a data.frame will allow us to access particular variables in the data.frame
+
+```{r}
+ToothGrowth$len
+```
+
+Exercise 2: Determine classes of variables
+======================================================== 
+* Determine the class of `supp` and `dose` from the ToothGrowth data
+
+
+Exercise 2 Solution
+========================================================
+
+* The class of the `supp` variable is a factor and the class of the `dose` variable is numeric
+* Factors are also called categorical variables
+
+```{r}
+class(ToothGrowth$supp)
+class(ToothGrowth$dose)
+```
+
+Creating simple data.frames directly in R
+========================================================
+
+```{r}
+df <- data.frame(
+  a = c(1, 2, 3),
+  b = c("x", "y", "z"),
+  c = c(TRUE, TRUE, FALSE),
+  d = factor(c("cat", "dog", "horse"))
+  )
+```
+
+Taking subsets of rows / columns
+========================================================
+
+```{r}
+# Extracting a single row
+df[3, ]
+
+# Extracting a single column
+df[, 2]
+
+# Extracting multiple rows
+df[c(1,3), ]
+
+# Extracting multiple columns
+df[, c(2,3)]
+
+# Removing rows
+df[-c(2,3), ]
+
+# Removing columns
+df[, -3]
+
+# Extracting a column by name
+df[, c("a", "c")]
+df$a
+
+# Returning rows that meeting only a certain criteria
+df[df$c == TRUE & df$a >1, ]
+```
+
+Exercise 3: Subsetting the ToothGrowth data
+======================================================== 
+* Imagine we want to compare tooth growth for vitamin C doses of 0.5 and 2 mg per day with a delivery method of orange juice ignoring all of the other collected data
+
+* Extract the lengths separately for the orange juice 0.5 mg/day group and the orange juice 2.0mg/day group
+
+Exercise 3 Solution
+======================================================== 
+
+```{r}
+len05 <- ToothGrowth[ToothGrowth$dose == 0.5 & ToothGrowth$supp == "OJ",]$len
+len20 <- ToothGrowth[ToothGrowth$dose == 2.0 & ToothGrowth$supp == "OJ",]$len
+```
+
+t-test for the ToothGrowth Data
+======================================================== 
+
+* A t-test can be run in R using the function `t.test`
+* For instance, lets say that we wanted to run a t-test to test for a difference between the 0.5 mg/day and the 2.0mg/day orange juice groups from the ToothGrowth data.
+
+```{r}
+# Conduct a two sample, two-sided Welch's t-test
+t.test(len20, len05)
+```
+
+* Running the `t.test` function prints out a few helpful pieces of information including
+    + The t-statistic
+    + The error degrees of freedom
+    + The p-value
+    + 95 \% confidence intervals on the estimated difference in means
+    + Sample means for the two groups
+
+
+Options for the `t.test` function
+========================================================
+
+* We can browse the `t.test` options by typing
+
+```{r}
+?t.test
+```
+
+* Some of the most useful options are:
+    + `alternative`: Run a 1-sided t-test
+    + `paired`: Conducting paired t-tests
+    + `var.equal`: Conducting equal variance t-tests
+    
+* To conduct a one sample t-test to test the null hypothesis that the mean length for the 0.5 mg/day group was >= 15
+
+```{r}
+t.test(len05, mu = 15, alternative = "less")
+
+```
+
+Exercise 4: T-tests
+======================================================== 
+
+* Conduct a one-sided t-test to test the null hypothesis that the mean length for the 2.0 mg/day group is <= 24
+
+
+
+Exercise 4 Solution
+======================================================== 
+
+```{r}
+t.test(len20, mu = 24, alternative = "greater")
+
+```
+
+

@@ -1,0 +1,297 @@
+---
+title: "CISER Statistics in R Workshop: Day 2"
+subtitle: "Presented by the Center for Interdisciplinary Statistical Education and Research"
+output: 
+  slidy_presentation: default
+
+---
+
+Workshop Overview
+======================================================== 
+
+```{r init, include = F}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, error = F)
+```
+
+```{r load, echo = F, include = F}
+source("../../../classes/stat511/R/show_png.R")
+library(tidyverse)
+```
+
+* Day 1
+    + Sample Size Calculations
+    + Using R Data Frames 
+    + t-tests
+
+* Day 2
+    + Linear regression
+    + Reading data into R  
+    + Full/reduced drop tests for categorical variables
+    + Random Effects Models
+
+
+Motor Trend Car Road Tests
+======================================================== 
+
+The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models).
+
+
+* mpg	 Miles/(US) gallon
+* wt	 Weight (1000 lbs)
+* am	 Transmission (0 = automatic, 1 = manual)
+* gear	 Number of forward gears
+
+```{r}
+head(mtcars)
+```
+
+Simple Linear Regression in R
+======================================================== 
+
+* We can use the `mtcars` data to get a sense of the relationship between a car's weight and it's gas mileage
+
+* The `plot` function can be used to create a scatter plot for continuous data
+
+```{r}
+plot(mtcars$wt, mtcars$mpg)
+```
+
+* The plot appears to show a relationship between the weight of a car and the gas mileage
+
+
+Exercise 1: Construct a scatter plot
+======================================================== 
+
+* Construct a scatter plot of the miles per gallon vs. displacement
+
+Exercise 1: Solution
+======================================================== 
+
+```{r}
+plot(mtcars$disp, mtcars$wt)
+```
+
+Linear regression to understand the relationship between gas mileage and weight
+======================================================== 
+* We can use linear regression to model this data
+
+* The function `lm` will fit a linear regression 
+
+```{r}
+mod <- lm(mpg ~ wt, data = mtcars)
+```
+
+* The expression `mpg ~ wt` is known as a model formula, and is a key aspect of fitting various models in R
+
+* The model formula can be read as: *mpg is modeled as a (linear) function of weight*
+
+* We can look at a simple summary of the linear regression by typing
+
+```{r}
+summary(mod)
+```
+
+* Key metrics to look at are:
+    + Parameter estimates (intercept and slope)
+    + Standard error in the estimates
+    + t-statistic for testing the hypothesis that each parameter is equal to zero
+    + Adjusted R-squared indicates the expected out of sample variance explained for the same population
+    + Overall test of significance for all parameters in the model except the intercept
+
+Exercise 2: Fitting a linear model 
+======================================================== 
+
+* Fit a linear model of gross horsepower (hp) vs. displacement
+* Compare this fit to a fit of gross horsepower (hp) vs. number of cylinders
+* Compare the R-squared adjusted to get a sense of which variable better explains horsepower
+
+Exercise 2: Solution
+======================================================== 
+
+* The R-squared adjusted for the model with displacement is 0.61
+* The R-squared adjusted for the model with cyl is 0.68
+* The R-squared adjusted is larger for the model with cyl
+
+```{r}
+mod <- lm(hp ~ disp, data = mtcars)
+summary(mod)$adj.r.squared
+mod <- lm(hp ~ cyl, data = mtcars)
+summary(mod)$adj.r.squared
+```
+
+Extracting Statistics from a Fitted Regression Model
+======================================================== 
+
+* A fitted regression model comes with various statistics
+* Depending on the type of regression model, there may be different statistics available
+* You can check what is available by looking at the `value` section in the help for the function that has been called
+* Alternatively, you can look at the names of the list that was returned
+
+```{r}
+mod <- lm(hp ~ cyl, data = mtcars)
+names(summary(mod))
+summary(mod)$adj.r.squared
+```
+
+Fitting Models with Factor Variables
+======================================================== 
+
+* Lets consider how the mpg relates to the number of forward gears
+* For this dataset, there are cars with 3, 4, and 5 total forward gears
+* We could treat gears as a continuous variable and fit a linear model
+* Below is a plot showing mpg vs. gear along with the best fit linear regression model with gear treated as a linear continuous predictor
+
+```{r}
+mod <- lm(mpg ~ gear, data = mtcars)
+summary(mod)$adj.r.squared
+plot(mtcars$gear, mtcars$mpg)
+lines(mtcars$gear, fitted(mod))
+```
+
+* Assuming linearity of gear does not seem to adequately reflect the relationship between the number of gears and the gas mileage
+
+Fitting Models with Factor Variables
+======================================================== 
+* We can treat gear as a factor variable
+* We can include the factor function directly in the model formula
+
+```{r}
+mtcars$fgear <- factor(mtcars$gear)
+mod <- lm(mpg ~ fgear, data = mtcars)
+summary(mod)$adj.r.squared
+plot(mtcars$gear, mtcars$mpg)
+lines(mtcars$gear, fitted(mod))
+lines(mtcars$gear, fitted(mod), col = "red")
+```
+
+* Treating gear as a categorical variable allows for more flexibility in the relationship
+* The R-squared adjusted for mpg~factor(gear) is 0.39
+* The R-squared adjusted for mpg~gear is 0.21
+
+Multiple Regression with Interactions
+======================================================== 
+
+* We can construct multiple regression models by including more variables in the model
+* If we are interested in making a model that best explains the variation in gas mileage, we might try something like
+
+```{r}
+mod <- lm(mpg ~ fgear + wt + carb + wt:carb, data = mtcars)
+```
+
+* In this model, we have included linear terms for wt, fgear, carb and an interaction between wt and carb
+* Model terms (wt, fgear, carb, wt:carb) are included additively using the `+` operator
+* Interaction terms can be created using the `:` operator
+* This model formula can be simplified by instead using the `*` operator
+* The `*` operator includes the interaction and all lower order terms
+
+```{r}
+mod <- lm(mpg ~ fgear + wt*carb, data = mtcars)
+summary(mod)$adj.r.squared
+```
+
+Exercise 3: Fit a multiple regression model
+======================================================== 
+
+* Fit a multiple regression model where you explain variation in horsepower (hp) using the variables displacement (disp), automatic v. manual (am) and the interaction
+* Is there any evidence to suggest an interaction between cyl and wt?
+
+Exercise 3: Solution
+======================================================== 
+
+* There appears to be substantial evidence against the null hypothesis of no interaction between displacement and whether the car is automatic/manual (t = 3.85, df = 28, p = 0.0006).
+
+```{r}
+mod <- lm(hp ~ disp + am + disp:am, data = mtcars)
+summary(mod)
+```
+
+Full / Reduced Drop Tests for Testing Categorical Variables
+======================================================== 
+
+* Consider the variable we constructed called `fgear`
+* The model formula `mpg ~ fgear + wt` allows us to 
+
+```{r}
+mod <- lm(mpg ~ wt + fgear, data = mtcars)
+summary(mod)
+```
+
+* `summary` does not provide overall evidence concerning a `gear` effect
+* We can drop terms and summarise the evidence by comparing full and reduced models
+
+```{r}
+mod0 <- lm(mpg ~ wt, data = mtcars)
+anova(mod, mod0)
+```
+
+* This will provide us with a p-value that summarises the effect of `fgear` conditional on `wt` being in the model
+
+* We can obtain on test for each term in the model using the `drop1` command
+
+```{r}
+drop1(mod, test = "F")
+```
+
+
+Exercise 5: Test multiple categorical variables
+======================================================== 
+
+* Using the `mtcars` data, fit a model with `mpg` as the response, and `cyl` and `gear` as **categorical** explanatory variables
+* Obtain F drop test statistics for each of the two factors (cyl, gear) conditional on the other being in the model
+
+Exercise 5: Solution
+======================================================== 
+
+```{r}
+mtcars$fcyl <- factor(mtcars$cyl)
+drop1(lm(mpg ~ fgear + fcyl, data = mtcars))
+```
+
+
+Reading your data into R
+======================================================== 
+
+* Data can be read into R in a variety of formats
+* Here we focus on tabular formats where data is stored in basic text files
+* We also assume that each column is separated with a particular separator 
+* Examples include tab delimited files and comma separated files
+* We can read in a file with comma separated values (csv) using
+
+```{r reading_data, eval = F}
+platelet <- read.table("platelet.csv", sep = ",", header = T)
+```
+
+
+File Access / Working Directory
+======================================================== 
+* The working directory is the folder that you are working in 
+* When accessing files in working directory, you do not need to provide a file path
+* `getwd()` tells you your current working directory
+* If the file you want to access is not in the current working directory, you can change the working directory with `setwd()`
+
+```{r, eval = F}
+setwd("C:/mystuff/") 
+```
+
+* The backslash "\\" is an escape character in R. If you use it for file paths, you must use it twice
+```{r, eval = F}
+setwd("C:\\mystuff\\")
+```
+
+* Alternatively, you can use the dropdown for changing the working directory
+
+
+Exercise 5: Read data into R from the file `catpain.csv`
+======================================================== 
+* Try reading in the file `catpain.csv` 
+
+
+Exercise 5: Solution
+======================================================== 
+
+* Your solution will differ slightly from this
+```{r, eval = F}
+setwd("./data")
+catpain <- read.table("catpain.csv", header = T, sep = ",")
+```
+
