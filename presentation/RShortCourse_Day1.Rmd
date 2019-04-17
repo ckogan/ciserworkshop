@@ -17,17 +17,15 @@ knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, error = F)
 source("../../../classes/stat511/R/show_png.R")
 library(tidyverse)
 ```
-
 * Day 1
     + Sample Size Calculations
     + Using R Data Frames 
     + t-tests
-    + Linear regression
 
 * Day 2
-    + Reading data into R  
-    + Fixed Effects ANOVAs
-    + Random Effects Models
+    + Linear regression
+    + Full/reduced drop tests 
+    + Reading data into R
 
 
 Sample Size Calculations in R

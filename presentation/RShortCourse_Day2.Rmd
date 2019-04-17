@@ -25,9 +25,8 @@ library(tidyverse)
 
 * Day 2
     + Linear regression
-    + Reading data into R  
-    + Full/reduced drop tests for categorical variables
-    + Random Effects Models
+    + Full/reduced drop tests 
+    + Reading data into R
 
 
 Motor Trend Car Road Tests
