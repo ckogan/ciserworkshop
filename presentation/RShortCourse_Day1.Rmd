@@ -139,7 +139,7 @@ pwr.t.test(d = 0.75 / 1.5, sig.level = 0.05, power = 0.90, type = "one.sample", 
 
 Tooth Growth Dataset
 ======================================================== 
-ToothGrowth data set contains the result from an experiment studying the effect of vitamin C on tooth growth in 60 Guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, (orange juice or ascorbic acid (a form of vitamin C and coded as VC).
+ToothGrowth data set contains the result from an experiment studying the effect of vitamin C on tooth growth in 60 Guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, (orange juice or ascorbic acid, a form of vitamin C and coded as VC).
 
 * The `head` function returns the first or last parts of a vector, matrix, table, data frame or function
 * The `head` function is useful in getting a quick sense of what your data look like

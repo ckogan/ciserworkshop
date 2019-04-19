@@ -26,7 +26,9 @@ library(tidyverse)
 * Day 2
     + Linear regression
     + Full/reduced drop tests 
+    + Testing linear model assumptions
     + Reading data into R
+    + Tests and models for binary data
 
 
 Motor Trend Car Road Tests
@@ -232,19 +234,136 @@ drop1(mod, test = "F")
 ```
 
 
-Exercise 5: Test multiple categorical variables
+Exercise 4: Test multiple categorical variables
 ======================================================== 
 
 * Using the `mtcars` data, fit a model with `mpg` as the response, and `cyl` and `gear` as **categorical** explanatory variables
 * Obtain F drop test statistics for each of the two factors (cyl, gear) conditional on the other being in the model
 
-Exercise 5: Solution
+Exercise 4: Solution
 ======================================================== 
 
 ```{r}
 mtcars$fcyl <- factor(mtcars$cyl)
 drop1(lm(mpg ~ fgear + fcyl, data = mtcars))
 ```
+
+
+Testing Assumptions of the Linear Model
+======================================================== 
+* Key assumptions
+    - Linearity of y vs. x
+    - Equal variance for all errors
+    - Normality
+    - Independence
+
+* Testing linearity
+    - Plot residuals vs. each x
+* Testing equal variance
+    - Plot residuals vs. fitted values
+* Testing normality
+    - Normal quantile plot
+* Testing independence
+    - Consider design
+    - Consider plotting over space/time
+
+
+Testing Assumptions: Kentucky Derby
+======================================================== 
+
+* Kentucky Derby horse race winners from 1896 to 2011 is available from the package Sleuth3 
+* In all those years the race was 1.25 miles in length so that winning time and speed are exactly inversely related. 
+* Important variables are:
+    + Speed
+    + Conditions (Fast/Slow track)
+    + Starters (# horses in the race)
+    + Year
+
+```{r}
+library(Sleuth3)
+derby <- ex0920
+head(derby)
+```
+
+* We consider fitting a linear regression model for Speed vs. Year
+
+```{r}
+mod <- lm(Speed ~ Year, data = derby)
+```
+
+
+Testing Assumption of Linearity: Kentucky Derby
+======================================================== 
+
+* We can test the assumption of linearity of Year by plotting the model residuals against the Year
+* The `residuals` function can be used to extract the residuals from the model
+* It is similar to just using `mod$residuals`, but allows you to compute specialized residuals if desired
+
+```{r}
+plot(derby$Year, residuals(mod))
+```
+
+* Trends in the residuals indicate that we may not have captured the relationship between Year and the response
+* We can try including a quadratic term
+* Note that `^2` indicates something special for model formulas - to include all second order interactions and lower terms
+* The use of the `I` function allows us to compute Year^2 before we evaluate the model formula
+
+```{r}
+mod <- lm(Speed ~ Year + I(Year^2), data = derby)
+```
+
+* The new model seems to adequately capture the relationship between Speed and Year
+
+```{r}
+plot(derby$Year, residuals(mod))
+```
+
+Testing Assumption of Normality: Kentucky Derby
+========================================================
+
+* A normal quantile plot can be conducted to look for evidence against the assumption of normality of the errors
+* Note that normality is not a critical assumption, minor to moderate deviations from normality are not likely to have a substantial effect on p-values / confidence intervals
+* We are looking typically for major deviations
+
+```{r}
+qqnorm(residuals(mod))
+qqline(residuals(mod), probs = c(0.25, 0.75))
+```
+
+
+Testing Assumption of Variance Homogeneity
+========================================================
+
+* The plausibility of the variance homogeneity can be assessed with a plot of residuals vs. fitted values
+
+```{r}
+plot(fitted(mod), residuals(mod))
+```
+
+* Overall, we are looking for moderate changes in the spread of the data for different fitted values
+* This model fitted here does not appear to have any major issues with variance homogeneity
+
+Exercise 5: Testing Assumptions
+======================================================== 
+
+
+* Use the mtcars dataset
+* Consider the variables `mpg`, `disp`, `am`
+* Model `mpg` as a function of `disp` and `am`
+* Test the assumption of linearity of `disp` by plotting residuals vs. disp
+* Test the assumption of normality of the errors by using `qqnorm`
+* Test the assumption of variance homogeneity by plotting residuals vs. fitted values
+
+
+Exercise 5: Solution
+======================================================== 
+
+```{r}
+mod <- lm(mpg ~ disp + am, mtcars)
+plot(mtcars$disp, residuals(mod))
+qqnorm(residuals(mod))
+```
+
 
 
 Reading your data into R
@@ -280,17 +399,193 @@ setwd("C:\\mystuff\\")
 * Alternatively, you can use the dropdown for changing the working directory
 
 
-Exercise 5: Read data into R from the file `catpain.csv`
+Exercise 6: Read data into R from the file `catpain.csv`
 ======================================================== 
 * Try reading in the file `catpain.csv` 
+* Look at the first few rows of the data with the `head` function
 
 
-Exercise 5: Solution
+Exercise 6: Solution
 ======================================================== 
 
 * Your solution will differ slightly from this
 ```{r, eval = F}
 setwd("./data")
 catpain <- read.table("catpain.csv", header = T, sep = ",")
+head(catpain)
 ```
+
+Pearson's chi-squared: Vitamin C and the Common Cold
+======================================================== 
+
+* Experiment to understand whether vitamin C helps to prevent the common cold
+* 818 volunteers
+* Vitamin C group received 1000mg of vitamin C per day
+* Control group received equal amount of inert pill
+* The data is shown below
+
+```{r}
+cc <- matrix(c(335, 302, 76, 105), nrow = 2)
+colnames(cc) <- c("cold", "nocold")
+rownames(cc) <- c("placebo", "vitaminc")
+cc
+```
+
+* We conduct a chi-squared test to assess whether contracting the common cold is plausibly independent of taking vitamin C
+* We use the function `chisq.test()` to conduct the test
+
+```{r}
+chisq.test(cc, correct = F)
+```
+
+* We find moderate evidence against independence of taking vitamin C and contracting the common cold (X-squared = 6.33, p = 0.012).
+
+Exercise 7: Pearson's chi-squared
+======================================================== 
+
+* Investigation into association between smoking and lung cancer
+* 86 lung cancer patients and 86 random individuals from the same community were interviewed about their smoking habits
+* Conduct a chi-squared test to assess the plausibility of smoking and lung cancer being independent in these two groups of individuals
+
+```{r}
+cancer <- matrix(c(83, 3, 72, 14), nrow = 2)
+colnames(cancer) <- c("cancer", "control")
+rownames(cancer) <- c("smokers", "nonsmokers")
+cancer
+```
+
+Exercise 7: Solution
+======================================================== 
+
+* We find convincing evidence against independence of smoking and lung cancer (X-squared = 7.90, p = 0.0049).
+
+```{r}
+chisq.test(cancer, correct = F)
+```
+
+
+Logistic Regression
+======================================================== 
+* Logistic regression is used for modeling binary data
+* It extends the simple tests of odds for two groups to allow this test to be made after adjusting for other variables
+* This can allow you to test for an effect after accounting for confounding factors
+* Logistic regression involves interpretation of odds ratios
+
+Odds
+======================================================== 
+
+* Odd is defined as the proportion yes divided by the proportion no
+* $\omega_i = \pi / (1-\pi)$
+* An event with a chance of 0.95 has odds of 19 to 1 in favor of its occurrence
+* Odds must be greater than 0 with no upper limit
+* Proportions must be between 0 and 1
+
+Titanic Dataset
+======================================================== 
+
+* The Titanic dataset from the PASWR library gives information about the passangers on the Titanic, including whether they survived
+* We can help understand more about what happened on the titanic by modeling survival with logistic regression
+* The data can be found in the `PASWR` library
+* Make sure to run `install.packages('PASWR')`
+
+```{r}
+library(PASWR)
+head(titanic3)
+```
+
+* We are interested in understanding if the rates of survival substantially different for different passenger classes?
+* A likelihood ratio test (chi-square = 127.8, p < 2.2e-16) provides substantial evidence against the null hypothesis of no differences in the survival rate between passanger classes
+
+```{r}
+mod <- glm(survived ~ pclass, data = titanic3, family = "binomial")
+drop1(mod, test = "Chisq")
+```
+
+* We can determine the odds ratio of survival comparing 2nd class to 1st class
+
+```{r}
+summary(mod)
+```
+
+* The value -0.77 represents the log odds of survival for 2nd class vs. first class
+* We can compute the odds ratio by reversing the transformation using exp
+
+```{r}
+exp(-0.77)
+```
+
+* Confidence intervals can be obtained using confint
+* We can compute confidence intervals on the odds ratios by reversing the transformation again
+
+```{r}
+exp(confint(mod))
+```
+
+* A 95\% confidence interval on the odds ratio ranges from 0.33 to 0.64
+
+Exercise 8: Logistic regression
+======================================================== 
+
+* Regress survival on gender only
+* Estimate and produce 95\% confidence intervals on the odds of survival for females to males
+
+Exercise 8: Solution
+======================================================== 
+
+```{r}
+mod <- glm(survived ~ sex, data = titanic3, family = "binomial")
+exp(2.42)
+exp(-confint(mod))
+```
+
+
+Random Effects
+======================================================== 
+When you might consider using a random effect
+
+* don't want to test hypotheses about differences between responses at particular levels of the grouping variable
+* do want to quantify the variability among levels of the grouping variable
+* do want to make predictions about unobserved levels of the grouping variable
+* do want to combine information across levels of the grouping variable
+* have variation in information per level (number of samples or noisiness)
+* have levels that are randomly sampled from/representative of a larger population
+* have a categorical predictor that is a nuisance variable (is not of direct interest but should be controlled for)
+
+If you have sampled fewer than five levels of the grouping variable, you should strongly consider treating it as a fixed effect even if one or more criteria above apply
+
+Bolker, Benjamin M. “Linear and Generalized Linear Mixed Models.” In Ecological Statistics, edited by Gordon A. Fox, Simoneta Negrete-Yankelevich, and Vinicio J. Sosa, 309–33. Oxford University Press, 2015. https://doi.org/10.1093/acprof:oso/9780199672547.003.0014.
+
+Random Effects Models in R
+======================================================== 
+
+* Here we fit a random effects model using the `lmer` function
+* We can add a random effect for Rail using `(1|Rail)`
+* The summary command shows us the estimates of the variation due to between Rails and variation due to within Rails
+
+```{r}
+library(nlme)
+library(lme4)
+mod <- lmer(travel ~ (1|Rail), data = Rail)
+summary(mod)
+```
+
+Other R Resources
+======================================================== 
+
+* Learn about the key tidyverse packages
+    + https://dplyr.tidyverse.org/
+    + https://ggplot2.tidyverse.org/
+    + https://tidyr.tidyverse.org/
+* See `multcomp` package for doing multiple comparisons    
+* Some handy cheatsheets
+    + https://www.rstudio.com/resources/cheatsheets/
+* Get your R questions answered
+    + https://stackoverflow.com/questions/tagged/r
+* Get your stats questions answered
+    + https://stats.stackexchange.com/
+* Get your quantitative methods for medicine questions answered
+    + https://discourse.datamethods.org/about
+* Ask questions about mixed effects models
+    + https://stat.ethz.ch/mailman/listinfo/r-sig-mixed-models
+
 

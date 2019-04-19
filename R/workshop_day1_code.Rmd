@@ -1,0 +1,16 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(pwr)
+pwr.t.test(d = 0.75 / 1.5, sig.level = 0.05, power = 0.90, type = "one.sample", alternative = "two.sided")
+
+```
+
